@@ -10,7 +10,7 @@ const TabNavigator =  createBottomTabNavigator({
     Player   : Player ,
     ImagePicker : ImagePicker,
   }, {
-
+    initialRouteName:"Player",
   });
 
 export default RootScreen  = createAppContainer(TabNavigator);

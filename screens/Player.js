@@ -1,8 +1,18 @@
 import React, { Component } from 'react'
-import { Text, View ,ActivityIndicator,FlatList,TouchableHighlight} from 'react-native'
+import { Text, View ,ActivityIndicator,StyleSheet,TouchableHighlight,Dimensions,Image} from 'react-native'
 import axios from 'axios';
 import Video from 'react-native-video';
 import Slider from 'react-native-slider'
+import Carousel, { ParallaxImage } from 'react-native-snap-carousel';
+import SongItem from '../components/SongItem';
+
+const horizontalMargin = 15;
+// const slideWidth = 280;
+
+const sliderWidth = Dimensions.get("window").width;
+const itemWidth = sliderWidth - horizontalMargin * 3;
+const itemHeight = 100;
+
 
 export default class Player extends Component {
   constructor(props){
@@ -11,9 +21,27 @@ export default class Player extends Component {
       songs:null,
       currentPosition:0,
       totalLength:1,
-      currentSong:null,
+      currentSong:{ "title" : "Jazz in Paris",
+                    "album" : "Jazz & Blues",
+                    "artist" : "Media Right Productions",
+                    "genre" : "Jazz & Blues",
+                    "source" : "Jazz_In_Paris.mp3",
+                    "image" : "album_art.jpg",
+                    "trackNumber" : 1,
+                    "totalTrackCount" : 6,
+                    "duration" : 103,
+                    "site" : "https://www.youtube.com/audiolibrary/music"
+                  },
     }
   }
+
+  _renderItem ({item, index}, parallaxProps) {
+    return (
+    <SongItem
+      item={item}
+      parallaxProps={parallaxProps}/>
+  );
+}
 
   setDuration(data) {
     this.setState({totalLength: Math.floor(data.duration)});
@@ -44,12 +72,23 @@ export default class Player extends Component {
     });
   }
 
-  _renderItem = ({item,index})=>(
-    <TouchableHighlight 
-      onPress={()=>this.setState({currentSong:item,currentPosition:0})} 
-      style={{margin:10}} key={index}>
-      <Text>{item.title}</Text>
-    </TouchableHighlight>)
+  componentWillUnmount(){
+    
+  }
+
+  _onSnapToItem(index){
+    console.log(index+"onSnapTOItem");
+    this.setState({
+      currentSong:this.state.songs[index],
+    })
+  }
+
+  _onScroll(){
+    console.log("OnScroll")
+    this.setState({
+      currentSong:this.state.songs[this._carousel.currentIndex]
+    })
+  }
 
   render() {
     if(!this.state.songs){
@@ -77,23 +116,65 @@ export default class Player extends Component {
              />
         );
 
-
       return(
-        <View style={{flex:1}}>
+        <View style={{flex:1}} >
+          <View style={styles.header}> 
+
+          </View>
+          <View style={{alignItems:'center',justifyContent:'center'}}>
+            <Carousel
+                ref={(c) => { this._carousel = c; }}
+                data={[...this.state.songs]}
+                renderItem={this._renderItem}
+                hasParallaxImages={true}
+                onBeforeSnapToItem={(index)=>this._onSnapToItem(index)}
+                sliderWidth={sliderWidth}
+                itemWidth={itemWidth}
+                activeSlideOffset={10}
+                inactiveSlideScale={0.94}
+                inactiveSlideOpacity={0.7}
+                removeClippedSubviews={true}
+              />
+            {video}
+          </View>
+          <View style={{margin:10}}>
+            <Slider
+              value={this.state.currentPosition}
+              onValueChange={value => {this.seek(value);}}
+              maximumValue={this.state.totalLength}
+            />
+            <View style={{flexDirection:'row',justifyContent:'space-between'}}>
+              <Text>{this.state.currentPosition}</Text>
+              <Text>{this.state.totalLength}</Text>
+            </View>
+          </View>
           
-          <FlatList 
-            keyExtractor={(item,index)=>{item.trackNumber}}
-            renderItem={this._renderItem}
-            data={[...this.state.songs]}/>
-          {video}
-          <Slider
-            value={this.state.currentPosition}
-            onValueChange={value => {this.seek(value);}}
-            maximumValue={this.state.totalLength}
-          />
         </View>
       )
     }
     
   }
 }
+
+
+const styles = StyleSheet.create({
+  item:{
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  image:{
+    
+  },
+  title:{
+
+  },
+  imageContainer:{
+    height:300,
+    width:300,
+    borderRadius:5
+  },
+  header:{
+    height:50
+  }
+
+})
