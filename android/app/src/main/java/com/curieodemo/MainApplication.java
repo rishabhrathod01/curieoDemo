@@ -3,6 +3,7 @@ package com.curieodemo;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.arthenica.reactnative.RNFFmpegPackage;
 import com.reactnative.ivpusic.imagepicker.PickerPackage;
 import com.brentvatne.react.ReactVideoPackage;
 import com.zmxv.RNSound.RNSoundPackage;
@@ -29,6 +30,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNFFmpegPackage(),
             new PickerPackage(),
             new ReactVideoPackage(),
             new RNSoundPackage(),

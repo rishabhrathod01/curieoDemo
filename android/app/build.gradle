@@ -139,6 +139,7 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-ffmpeg')
     implementation project(':react-native-image-crop-picker')
     implementation project(':react-native-video')
     implementation project(':react-native-sound')
