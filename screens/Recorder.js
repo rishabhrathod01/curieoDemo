@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { AudioRecorder, AudioUtils } from "react-native-audio";
 import Sound from "react-native-sound";
-import RecorderIcon from "../components/RecoderIcon";
 import { LogLevel, RNFFmpeg } from "react-native-ffmpeg";
 
 export default class Recorder extends Component {
@@ -23,12 +22,9 @@ export default class Recorder extends Component {
     finished: false,
     audioPath: AudioUtils.DocumentDirectoryPath + "/test.aac",
     hasPermission: undefined,
-    trimPath: AudioUtils.DocumentDirectoryPath + "/trim.aac"
+    trimPath: AudioUtils.DocumentDirectoryPath + "/trim.aac",
+    mergePath: AudioUtils.DocumentDirectoryPath + "/merge.aac"
   };
-
-  componentWillMount() {
-    console.warn(this.state.audioPath);
-  }
 
   trimAudio = () => {
     console.log("Trim");
@@ -40,8 +36,11 @@ export default class Recorder extends Component {
   };
 
   componentWillUnmount() {
-    RNFFmpeg.cancel();
+    this.cancel();
   }
+  cancel = () => {
+    RNFFmpeg.cancel();
+  };
 
   prepareRecordingPath(audioPath) {
     AudioRecorder.prepareRecordingAtPath(audioPath, {
@@ -76,26 +75,6 @@ export default class Recorder extends Component {
         }
       };
     });
-  }
-
-  _renderButton(title, onPress, active) {
-    var style = active ? styles.activeButtonText : styles.buttonText;
-
-    return (
-      <TouchableHighlight style={styles.button} onPress={onPress}>
-        <Text style={style}>{title}</Text>
-      </TouchableHighlight>
-    );
-  }
-
-  _renderPauseButton(onPress, active) {
-    var style = active ? styles.activeButtonText : styles.buttonText;
-    var title = this.state.paused ? "RESUME" : "PAUSE";
-    return (
-      <TouchableHighlight style={styles.button} onPress={onPress}>
-        <Text style={style}>{title}</Text>
-      </TouchableHighlight>
-    );
   }
 
   async _pause() {
@@ -146,9 +125,9 @@ export default class Recorder extends Component {
     }
   }
 
-  playTrimAudio = () => {
+  playAudio = path => {
     setTimeout(() => {
-      var sound = new Sound(this.state.trimPath, "", error => {
+      var sound = new Sound(path, "", error => {
         if (error) {
           console.log("failed to load the sound", error);
         }
@@ -225,43 +204,57 @@ export default class Recorder extends Component {
     );
   }
 
+  mergeAudio = () => {
+    console.log("Marger");
+    let audioPath = this.state.audioPath;
+    let trimPath = this.state.trimPath;
+    let mergePath = this.state.mergePath;
+    RNFFmpeg.execute(
+      `-i ${audioPath} -i ${trimPath} -filter_complex concat=n=2:v=0:a=1 ${mergePath} `
+    ).then(result => console.log("FFmpeg process exited with rc " + result.rc));
+    //Result.rc = 0 => operation successful for any ffmpeg operation
+  };
   render() {
     return (
       <View style={styles.container}>
-        <View style={styles.controls}>
-          <TouchableHighlight
-            onPress={
-              !this.state.recording
-                ? this._record.bind(this)
-                : this._stop.bind(this)
-            }
-          >
-            <View>
-              <RecorderIcon />
-            </View>
-          </TouchableHighlight>
-
-          {!this.state.recording
-            ? this._renderButton(
-                "RECORD",
-                () => {
-                  this._record();
-                },
-                this.state.recording
-              )
-            : this._renderButton("STOP", () => {
-                this._stop();
-              })}
-          {this._renderButton("PLAY", () => {
-            this._play();
-          })}
-          {this._renderPauseButton(() => {
-            this.state.paused ? this._resume() : this._pause();
-          })}
-        </View>
-        <Text style={styles.progressText}>{this.state.currentTime}s</Text>
-        <Button onPress={this.playTrimAudio} title="play Trim Audio" />
-        <Button onPress={this.trimAudio} title="Trim Audio" />
+        <Button
+          style={styles.button}
+          onPress={() => {
+            !this.state.recording ? this._record() : this._stop();
+          }}
+          title={!this.state.recording ? "Record" : "Stop"}
+        />
+        <Button
+          style={styles.button}
+          onPress={() => this.playAudio(this.state.audioPath)}
+          title="play Recorded Audio"
+        />
+        <Text style={{ fontSize: 16 }}>{this.state.currentTime}s</Text>
+        <Button
+          style={styles.button}
+          onPress={() => this.playAudio(this.state.trimPath)}
+          title="play Trim Audio"
+        />
+        <Button
+          style={styles.button}
+          onPress={this.trimAudio}
+          title="Trim Audio"
+        />
+        <Button
+          style={styles.button}
+          onPress={() => this.playAudio(this.state.mergePath)}
+          title="play Merge Audio"
+        />
+        <Button
+          style={styles.button}
+          onPress={this.mergeAudio}
+          title="Merge Audio"
+        />
+        <Button
+          style={styles.button}
+          onPress={this.cancel}
+          title="Cancel FFmpeg Operation"
+        />
       </View>
     );
   }
@@ -270,23 +263,13 @@ export default class Recorder extends Component {
 var styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    justifyContent: "space-evenly",
     alignItems: "center"
   },
-  controls: {
-    justifyContent: "center",
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row"
-  },
-  progressText: {
-    paddingTop: 50,
-    fontSize: 50,
-    color: "#000"
-  },
   button: {
-    padding: 5,
-    margin: 5,
+    flex: 1,
+    margin: 10,
+    height: 40,
     borderRadius: 5,
     backgroundColor: "grey"
   },

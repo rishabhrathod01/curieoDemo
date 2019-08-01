@@ -1,39 +1,51 @@
-import React, {Component} from 'react';
+import React, { Component } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Alert,
-  Image, TouchableOpacity, NativeModules, Dimensions
-} from 'react-native';
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Image,
+  TouchableOpacity,
+  NativeModules,
+  Dimensions
+} from "react-native";
 
-import Video from 'react-native-video';
+import Video from "react-native-video";
 
 var ImagePicker = NativeModules.ImageCropPicker;
 
-
 export default class ImagePickerView extends Component {
-
   constructor() {
     super();
     this.state = {
       image: null,
       images: null
     };
-    this.pickSingleWithCamera = this.pickSingleWithCamera.bind(this)
+    this.pickSingleWithCamera = this.pickSingleWithCamera.bind(this);
   }
 
-  pickSingleWithCamera(cropping, mediaType='photo') {
+  pickSingleWithCamera(cropping, mediaType = "photo") {
     ImagePicker.openCamera({
       cropping: cropping,
       width: 500,
       height: 500,
       includeExif: true,
-      mediaType,
-    }).then(image => {
-      console.log('received image', JSON.stringify(image));
-      this.setState({
-        image: {uri: image.path, width: image.width, height: image.height, mime: image.mime},
-        images: null
-      });
-    }).catch(e => alert(e));
+      mediaType
+    })
+      .then(image => {
+        console.log("received image", JSON.stringify(image));
+        this.setState({
+          image: {
+            uri: image.path,
+            width: image.width,
+            height: image.height,
+            mime: image.mime
+          },
+          images: null
+        });
+      })
+      .catch(e => alert(e));
   }
 
   pickSingleBase64(cropit) {
@@ -42,57 +54,81 @@ export default class ImagePickerView extends Component {
       height: 300,
       cropping: cropit,
       includeBase64: true,
-      includeExif: true,
-    }).then(image => {
-      console.log('received base64 image');
-      this.setState({
-        image: {uri: `data:${image.mime};base64,`+ image.data, width: image.width, height: image.height},
-        images: null
-      });
-    }).catch(e => alert(e));
+      includeExif: true
+    })
+      .then(image => {
+        console.log("received base64 image");
+        this.setState({
+          image: {
+            uri: `data:${image.mime};base64,` + image.data,
+            width: image.width,
+            height: image.height
+          },
+          images: null
+        });
+      })
+      .catch(e => alert(e));
   }
 
   cleanupImages() {
-    ImagePicker.clean().then(() => {
-      console.log('removed tmp images from tmp directory');
-    }).catch(e => {
-      alert(e);
-    });
+    ImagePicker.clean()
+      .then(() => {
+        console.log("removed tmp images from tmp directory");
+      })
+      .catch(e => {
+        alert(e);
+      });
   }
 
   cleanupSingleImage() {
-    let image = this.state.image || (this.state.images && this.state.images.length ? this.state.images[0] : null);
-    console.log('will cleanup image', image);
+    let image =
+      this.state.image ||
+      (this.state.images && this.state.images.length
+        ? this.state.images[0]
+        : null);
+    console.log("will cleanup image", image);
 
-    ImagePicker.cleanSingle(image ? image.uri : null).then(() => {
-      console.log(`removed tmp image ${image.uri} from tmp directory`);
-    }).catch(e => {
-      alert(e);
-    })
+    ImagePicker.cleanSingle(image ? image.uri : null)
+      .then(() => {
+        console.log(`removed tmp image ${image.uri} from tmp directory`);
+      })
+      .catch(e => {
+        alert(e);
+      });
   }
 
   cropLast() {
     if (!this.state.image) {
-      return Alert.alert('No image', 'Before open cropping only, please select image');
+      return Alert.alert(
+        "No image",
+        "Before open cropping only, please select image"
+      );
     }
 
     ImagePicker.openCropper({
       path: this.state.image.uri,
       width: 200,
       height: 200
-    }).then(image => {
-      console.log('received cropped image', image);
-      this.setState({
-        image: {uri: image.path, width: image.width, height: image.height, mime: image.mime},
-        images: null
+    })
+      .then(image => {
+        console.log("received cropped image", image);
+        this.setState({
+          image: {
+            uri: image.path,
+            width: image.width,
+            height: image.height,
+            mime: image.mime
+          },
+          images: null
+        });
+      })
+      .catch(e => {
+        console.log(e);
+        Alert.alert(e.message ? e.message : e);
       });
-    }).catch(e => {
-      console.log(e);
-      Alert.alert(e.message ? e.message : e);
-    });
   }
 
-  pickSingle(cropit, circular=false, mediaType) {
+  pickSingle(cropit, circular = false, mediaType) {
     ImagePicker.openPicker({
       width: 500,
       height: 500,
@@ -101,18 +137,25 @@ export default class ImagePickerView extends Component {
       compressImageMaxWidth: 1000,
       compressImageMaxHeight: 1000,
       compressImageQuality: 1,
-      compressVideoPreset: 'MediumQuality',
-      includeExif: true,
-    }).then(image => {
-      console.log('received image', image);
-      this.setState({
-        image: {uri: image.path, width: image.width, height: image.height, mime: image.mime},
-        images: null
+      compressVideoPreset: "MediumQuality",
+      includeExif: true
+    })
+      .then(image => {
+        console.log("received image", image);
+        this.setState({
+          image: {
+            uri: image.path,
+            width: image.width,
+            height: image.height,
+            mime: image.mime
+          },
+          images: null
+        });
+      })
+      .catch(e => {
+        console.log(e);
+        Alert.alert(e.message ? e.message : e);
       });
-    }).catch(e => {
-      console.log(e);
-      Alert.alert(e.message ? e.message : e);
-    });
   }
 
   pickMultiple() {
@@ -120,16 +163,23 @@ export default class ImagePickerView extends Component {
       multiple: true,
       waitAnimationEnd: false,
       includeExif: true,
-      forceJpg: true,
-    }).then(images => {
-      this.setState({
-        image: null,
-        images: images.map(i => {
-          console.log('received image', i);
-          return {uri: i.path, width: i.width, height: i.height, mime: i.mime};
-        })
-      });
-    }).catch(e => alert(e));
+      forceJpg: true
+    })
+      .then(images => {
+        this.setState({
+          image: null,
+          images: images.map(i => {
+            console.log("received image", i);
+            return {
+              uri: i.path,
+              width: i.width,
+              height: i.height,
+              mime: i.mime
+            };
+          })
+        });
+      })
+      .catch(e => alert(e));
   }
 
   scaledHeight(oldW, oldH, newW) {
@@ -137,74 +187,87 @@ export default class ImagePickerView extends Component {
   }
 
   renderVideo(video) {
-    console.log('rendering video');
-    return (<View style={{height: 300, width: 300}}>
-      <Video source={{uri: video.uri, type: video.mime}}
-         style={{position: 'absolute',
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0
-          }}
-         rate={1}
-         paused={false}
-         volume={1}
-         muted={false}
-         resizeMode={'cover'}
-         onError={e => console.log(e)}
-         onLoad={load => console.log(load)}
-         repeat={true} />
-     </View>);
+    console.log("rendering video");
+    return (
+      <View style={{ height: 300, width: 300 }}>
+        <Video
+          source={{ uri: video.uri, type: video.mime }}
+          style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: 0 }}
+          rate={1}
+          paused={false}
+          volume={1}
+          muted={false}
+          resizeMode={"cover"}
+          onError={e => console.log(e)}
+          onLoad={load => console.log(load)}
+          repeat={true}
+        />
+      </View>
+    );
   }
 
   renderImage(image) {
-    return <Image style={{width: 300, height: 300, resizeMode: 'contain'}} source={image} />
+    return (
+      <Image
+        style={{ width: 300, height: 300, resizeMode: "contain" }}
+        source={image}
+      />
+    );
   }
 
-  renderAsset(image) {
-    if (image.mime && image.mime.toLowerCase().indexOf('video/') !== -1) {
-      return this.renderVideo(image);
-    }
+  // renderAsset(image) {
+  //   if (image.mime && image.mime.toLowerCase().indexOf('video/') !== -1) {
+  //     return this.renderVideo(image);
+  //   }
 
-    return this.renderImage(image);
-  }
+  //   return this.renderImage(image);
+  // }
 
   render() {
-    return (<View style={styles.container}>
-      <ScrollView>
-        {this.state.image ? this.renderAsset(this.state.image) : null}
-        {/* {this.state.images ? this.state.images.map(i => <View key={i.uri}>{this.renderAsset(i)}</View>) : null} */}
-      </ScrollView>
-      <View style={{flexWrap:'wrap',flexDirection:'row'}}>
-        <TouchableOpacity onPress={() => this.pickSingle(true)} style={styles.button}>
-          <Text style={styles.text}>Select Single</Text>
-        </TouchableOpacity>
-         <TouchableOpacity onPress={() => this.pickSingleBase64(false)} style={styles.button}>
-          <Text style={styles.text}>Select Single Returning Base64</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={this.cleanupImages.bind(this)} style={styles.button}>
-        <Text style={styles.text}>Cleanup All Images</Text>
-        </TouchableOpacity>
-      
+    return (
+      <View style={styles.container}>
+        <ScrollView>
+          {this.state.image ? this.renderAsset(this.state.image) : null}
+          {/* {this.state.images ? this.state.images.map(i => <View key={i.uri}>{this.renderAsset(i)}</View>) : null} */}
+        </ScrollView>
+        <View style={{ flexWrap: "wrap", flexDirection: "row" }}>
+          <TouchableOpacity
+            onPress={() => this.pickSingle(true)}
+            style={styles.button}
+          >
+            <Text style={styles.text}>Select Single</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => this.pickSingleBase64(false)}
+            style={styles.button}
+          >
+            <Text style={styles.text}>Select Single Returning Base64</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={this.cleanupImages.bind(this)}
+            style={styles.button}
+          >
+            <Text style={styles.text}>Cleanup All Images</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>);
+    );
   }
 }
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center"
   },
   button: {
-    backgroundColor: 'black',
+    backgroundColor: "black",
     marginBottom: 10
   },
   text: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
-    textAlign: 'center'
+    textAlign: "center"
   }
 });
